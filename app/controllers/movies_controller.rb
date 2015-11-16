@@ -11,27 +11,35 @@ class MoviesController < ApplicationController
   end
 
   def index
-    ratings = params[:ratings]
-    sort = params[:sort]
-    @sorted = {}
     @all_ratings = Movie.all_ratings
-    logger.debug 'Ratings => ' + ratings.inspect
+
+    # handle user session for filtes
+    ratings = params[:ratings]
     if ratings != nil && !ratings.keys.empty?
-      @filtered_ratings = ratings.keys
-      logger.debug '@filtered_ratings => ' + @filtered_ratings.inspect
+      session[:filtered_ratings] = ratings.keys
+      ratings = ratings.keys
+    elsif session[:filtered_ratings] != nil
+      ratings = session[:filtered_ratings]
     else
-      @filtered_ratings = Movie.all_ratings
+      session[:filtered_ratings] = Movie.all_ratings
     end
-    if sort == 'title'
-      @sorted[:title] = true
-      @movies = Movie.order(:title)
-    elsif sort == 'release_date'
-      @sorted[:release_date] = true
-      @movies = Movie.order(:release_date)
-    elsif ratings != nil
-      @movies = Movie.where(rating: ratings.keys)
+
+    # check criterias
+    sort = params[:sort] != nil ? params[:sort].to_sym : nil
+    if sort == :title || sort == :release_date
+      session[:sorted] = sort.to_sym
+    elsif session[:sorted] != nil
+      session[:sorted] = session[:sorted].to_sym
+      sort = session[:sorted]
+    end
+
+    # do search
+    logger.debug 'Ratings => ' + ratings.to_s
+    logger.debug 'Sort => ' + sort.to_s
+    if sort != nil
+      @movies = Movie.where(rating: ratings).order(sort)
     else
-        @movies = Movie.all
+      @movies = Movie.where(rating: ratings)
     end
   end
 
