@@ -22,12 +22,13 @@ class MoviesController < ApplicationController
       ratings = session[:filtered_ratings]
     else
       session[:filtered_ratings] = Movie.all_ratings
+      ratings = session[:filtered_ratings]
     end
 
     # check criterias
     sort = params[:sort] != nil ? params[:sort].to_sym : nil
     if sort == :title || sort == :release_date
-      session[:sorted] = sort.to_sym
+      session[:sorted] = sort
     elsif session[:sorted] != nil
       session[:sorted] = session[:sorted].to_sym
       sort = session[:sorted]
